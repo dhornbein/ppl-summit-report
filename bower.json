@@ -1,0 +1,22 @@
+{
+  "name": "peoples-summit-report",
+  "authors": [
+    "'Drew Hornbein <'drew@goodgoodwork.io'>"
+  ],
+  "description": "Web app that displays data about The People's Summit registration",
+  "main": "index.html",
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "directory": "vendor",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "v4.0.0-alpha.6"
+  }
+}
