@@ -1,4 +1,4 @@
-var results;
+var parse;
 
 $( document ).ready(function() {
   // Load the Visualization API and the corechart package.
@@ -27,10 +27,8 @@ function drawChart() {
   url: url,
   cache: true,
   success: function(json){
-    results = json.feed.entry;
     google.visualization.mapsApiKey = mapAPIkey;
-
-    var parse = new Parse(results);
+    parse = new Parse(json);
 
     // Stipends requested
     parse.makeChart('PieChart','money_stipen_request',{
@@ -133,7 +131,8 @@ function drawChart() {
 
   }})
   .done(function() {
-    console.log( "second success" );
+    $('.loading').hide();
+    $('#main').show();
   })
   .fail(function() {
     console.log( "error" );
@@ -145,7 +144,17 @@ function drawChart() {
 }
 
 function Parse(data) {
-  this.data = data;
+  this.data = data.feed.entry;
+  // this.updated = data.updated.$t;
+  this.columns = [];
+  this.getColumns = function() {
+    for (var k in this.data[0]) {
+      if (k.startsWith('gsx$')) {
+        this.columns.push(k);
+      }
+    }
+  }
+  this.getColumns();
 
   this.makeChart = function(chartType,target,options,callback) {
     var data, chart;
@@ -168,4 +177,33 @@ function Parse(data) {
       callback(this.data[i],i);
     }
   };
+
+  this.total = {};
+  this.getTotals = function() {
+    var running = [];
+    for (var col of this.columns) {
+      running[col] = { $total: 0 };
+    }
+    console.log(running);
+    this.loopData(function(row,i){
+      for (var col in row) {
+        if (col in running) {
+          var cell = row[col].$t;
+          if (cell === '') {
+            continue;
+          }
+          running[col].$total += 1;
+
+          if (cell in running[col]){
+            running[col][cell] += 1;
+          } else {
+            running[col][cell] = 1;
+          }
+        }
+      }
+    }); // end data loopData
+
+    this.total = running;
+  };
+  this.getTotals();
 }
