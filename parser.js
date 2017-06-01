@@ -2,7 +2,7 @@ function Parse(data) {
   this.data = data.feed.entry;
   this.updated = data.feed.updated.$t;
   this.lastUpdated = new Date(this.updated);
-  this.entries = data.length;
+  this.entries = this.data;
 
   this.makeChart = function(chartType,target,options,callback) {
     var data, chart;
@@ -49,6 +49,19 @@ function Parse(data) {
       case prefix + "age":
         out = (out < 3) ? '' : out ;
         break;
+      case prefix + "lgbtq":
+      case prefix + "disabilities":
+        if (out.toLowerCase().startsWith('no')) {
+          out = 'no';
+        } else if (out.toLowerCase().startsWith('prefer not to say')) {
+          out = 'private';
+        } else {
+          out = 'yes';
+        }
+        break;
+      case prefix + 'stipendrequested':
+         out = (out.toLowerCase() == 'no') ? 'no' : 'yes';
+        break;
       default:
       out = cell.$t.trim().replace('"','');
 
@@ -89,7 +102,6 @@ function Parse(data) {
     for (var col of this.columns) {
       running[col] = { $total: 0 };
     }
-    console.log(running);
     this.loopData(function(row,i){
       // loop columns
       for (var col in row) {

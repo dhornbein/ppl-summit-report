@@ -20,8 +20,6 @@ function drawChart() {
 
   var localStorageName = 'ppl-summit-json';
 
-  console.log(url);
-
   $.ajax({
   dataType: "json",
   url: url,
@@ -32,35 +30,37 @@ function drawChart() {
 
     // Stipends requested
     parse.makeChart('PieChart','money_stipen_request',{
-      title:'Stipends Requested?',
       width:400,
-      height:300
+      height:300,
+      pieSliceText: 'none',
+      chartArea: {
+        left: 30,
+        width:'100%',
+        height:'80%'
+      },
+      slices: {  1: {offset: 0.2} }
     }, function() {
-      var totalYes = 0,
-          totalNo = 0;
-
-      parse.loopData(function(cell,i){
-        var stipend = cell.gsx$stipendrequested.$t.toLowerCase();
-        if (stipend === 'no' || stipend === '') {
-          totalNo++;
-        } else {
-          totalYes++;
-        }
-      });
-
       return [['Stipend', 'Total'],
-      ['yes', totalYes],
-      ['no', totalNo]];
+      ['Yes', parse.total.gsx$stipendrequested.yes],
+      ['No', parse.total.gsx$stipendrequested.no]];
 
     });
 
     // Stipends by org
     parse.makeChart('BarChart','money_stipen_by_org',{
-      title:'Stipends by Organization',
-      width:600,
-      height:400
+      width:700,
+      height:400,
+      chartArea: {
+        left: 280,
+        right: 10,
+        width:'90%',
+        height:'80%'
+      },
+      legend: {
+        position: 'none',
+      }
     }, function() {
-      var table = [['org','total','stipend requested']];
+      var table = [['org','Application','Stipend Requested']];
 
       parse.loopData(function(cell,i){
         var stipend = cell.gsx$stipendrequested.$t.toLowerCase();
@@ -131,10 +131,14 @@ function drawChart() {
 
   }})
   .done(function() {
+    var total = parse.total;
     $('.loading').hide();
     $('#main').show();
     // last updated
     $('#updated').html( 'last updated: ' + parse.lastUpdated );
+    $( "<p class='mb-0'>Total Applications:</p><h2 class='mt-0'>" + parse.data.length + "</h2>" ).appendTo('#totals');
+    $( "<p class='mb-0'>Accepted:</p><h2 class='mt-0'>" + total.gsx$accepted.$total + "</h2>" ).appendTo('#totals');
+    $( "<p class='mb-0'>Registered:</p><h2 class='mt-0'>" + total.gsx$registered.$total + "</h2>" ).appendTo('#totals');
   })
   .fail(function() {
     console.log( "error" );
