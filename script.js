@@ -105,7 +105,7 @@ function drawChart() {
       var table = [['State','Accepted','Applied']];
 
       parse.loopData(function(cell,i){
-        var state = cell.gsx$state.$t;
+        var state = parse.cleanDataState(cell.gsx$state.$t);
         if (state.length > 2) {
           return;
         } else {
@@ -133,6 +133,8 @@ function drawChart() {
   .done(function() {
     $('.loading').hide();
     $('#main').show();
+    // last updated
+    $('#updated').html( 'last updated: ' + parse.lastUpdated );
   })
   .fail(function() {
     console.log( "error" );
@@ -141,69 +143,4 @@ function drawChart() {
     console.log( "complete" );
   });
 
-}
-
-function Parse(data) {
-  this.data = data.feed.entry;
-  // this.updated = data.updated.$t;
-  this.columns = [];
-  this.getColumns = function() {
-    for (var k in this.data[0]) {
-      if (k.startsWith('gsx$')) {
-        this.columns.push(k);
-      }
-    }
-  }
-  this.getColumns();
-
-  this.makeChart = function(chartType,target,options,callback) {
-    var data, chart;
-    data = google.visualization.arrayToDataTable(callback());
-    switch (chartType) {
-      case 'BarChart':
-        chart = new google.visualization.BarChart(document.getElementById(target));
-        break;
-      case 'GeoChart':
-        chart = new google.visualization.GeoChart(document.getElementById(target));
-        break;
-      default:
-        chart = new google.visualization.PieChart(document.getElementById(target));
-    }
-    chart.draw(data, options);
-  };
-
-  this.loopData = function(callback) {
-    for (var i = 0; i < this.data.length; i++) {
-      callback(this.data[i],i);
-    }
-  };
-
-  this.total = {};
-  this.getTotals = function() {
-    var running = [];
-    for (var col of this.columns) {
-      running[col] = { $total: 0 };
-    }
-    console.log(running);
-    this.loopData(function(row,i){
-      for (var col in row) {
-        if (col in running) {
-          var cell = row[col].$t;
-          if (cell === '') {
-            continue;
-          }
-          running[col].$total += 1;
-
-          if (cell in running[col]){
-            running[col][cell] += 1;
-          } else {
-            running[col][cell] = 1;
-          }
-        }
-      }
-    }); // end data loopData
-
-    this.total = running;
-  };
-  this.getTotals();
 }
