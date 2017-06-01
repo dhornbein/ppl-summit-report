@@ -60,11 +60,13 @@ function drawChart() {
         position: 'none',
       }
     }, function() {
-      var table = [['org','Application','Stipend Requested']];
+      var table = [['org','Application','Registered','Stipend Requested']];
 
       parse.loopData(function(cell,i){
         var stipend = cell.gsx$stipendrequested.$t.toLowerCase();
         stipend = (stipend === 'no' || stipend === '') ? 0 : 1 ;
+        var registered = cell.gsx$registered.$t.toLowerCase();
+        registered = (registered === 'true') ? 1 : 0;
 
         var org = cell.gsx$organization.$t;
         if (org.toLowerCase() == 'unaffiliated') {
@@ -75,16 +77,17 @@ function drawChart() {
           if (table[j][0].toLowerCase() == org.toLowerCase()) {
             table[j][1]++;
             unique = false;
-            table[j][2] += stipend;
+            table[j][2] += registered;
+            table[j][3] += stipend;
           }
         }
         if (unique) {
-          table.push([org,0,stipend]);
+          table.push([org,0,registered,stipend]);
         }
       });
 
       for (var i = 0; i < table.length; i++) {
-        if (table[i][2] <= 0) {
+        if (table[i][1] <= 0) {
           table.splice(i,1);
         }
       }
@@ -102,7 +105,7 @@ function drawChart() {
           colors : ['ddecff','82b8ff','FFEE8D', 'FFE75F', 'FFE031','FFDC1A']
         },
     },function(){
-      var table = [['State','Accepted','Applied']];
+      var table = [['State','Registered','Accepted']];
 
       parse.loopData(function(cell,i){
         var state = parse.cleanDataState(cell.gsx$state.$t);
@@ -113,20 +116,85 @@ function drawChart() {
         }
         var accepted = (cell.gsx$accepted.$t == 'TRUE') ? 1 : 0 ;
 
+        var registered = cell.gsx$registered.$t.toLowerCase();
+        registered = (registered === 'true') ? 1 : 0;
+
         var unique = true;
         for (var j = 0; j < table.length; j++) {
           if (table[j][0] == state) {
-            table[j][2]++;
             unique = false;
-            table[j][1] += accepted;
+            table[j][2] += accepted;
+            table[j][1] += registered;
           }
         }
         if (unique) {
-          table.push([state,accepted,1]);
+          table.push([state,registered,accepted]);
         }
       });
 
       return table;
+    });
+
+    // Stipends requested
+    parse.makeChart('PieChart','demo_age',{
+      width:400,
+      height:300,
+      pieHole: 0.5,
+      pieSliceText: 'none',
+      legend: {
+        position: 'labeled'
+      },
+      chartArea: {
+        left: 30,
+        width:'100%',
+        height:'80%'
+      }
+    }, function() {
+      var out = [['Age', 'Total']];
+      var data = parse.total.gsx$age;
+      for (var k in data) {
+        if (k != '$total' && data.hasOwnProperty(k)) {
+          out.push([k,data[k]]);
+        }
+      }
+      return out;
+
+    });
+
+    // Stipends requested
+    parse.makeChart('PieChart','demo_race',{
+      width:400,
+      height:300,
+      pieHole: 0.5,
+      pieSliceText: 'none',
+      sliceVisibilityThreshold: 0.05,
+      legend: {
+        position: 'labeled'
+      },
+      chartArea: {
+        left: 30,
+        width:'100%',
+        height:'80%'
+      }
+    }, function() {
+      var out = [['Race', 'Total']];
+      var data = parse.total.gsx$racialethnicidentity;
+      var merge = [];
+      for (var k in data) {
+        if (k != '$total' && data.hasOwnProperty(k)) {
+          if (k == 'White or European-American') {
+            merge[0] = data[k];
+          } else if (k == 'Black or African-American') {
+            merge[1] = data[k];
+          } else {
+            out.push([k,data[k]]);
+          }
+        }
+      }
+      out['White or European-American'] = out['White or European-American'] + merge[0];
+      out['Black or African American'] = out['Black or African American'] + merge[1];
+      console.log(out);
+      return out;
     });
 
   }})
